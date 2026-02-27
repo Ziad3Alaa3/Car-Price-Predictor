@@ -1,0 +1,72 @@
+{
+    "numerical": [
+        "year",
+        "km_driven"
+    ],
+    "categorical": [
+        "brand",
+        "fuel",
+        "transmission",
+        "owner"
+    ],
+    "dropdowns": {
+        "brand": [
+            "Ambassador",
+            "Audi",
+            "BMW",
+            "Chevrolet",
+            "Datsun",
+            "Fiat",
+            "Force",
+            "Ford",
+            "Honda",
+            "Hyundai",
+            "Isuzu",
+            "Jaguar",
+            "Jeep",
+            "Kia",
+            "Land",
+            "MG",
+            "Mahindra",
+            "Maruti",
+            "Mercedes-Benz",
+            "Mitsubishi",
+            "Nissan",
+            "OpelCorsa",
+            "Renault",
+            "Skoda",
+            "Tata",
+            "Toyota",
+            "Volkswagen",
+            "Volvo"
+        ],
+        "fuel": [
+            "CNG",
+            "Diesel",
+            "Electric",
+            "LPG",
+            "Petrol"
+        ],
+        "transmission": [
+            "Automatic",
+            "Manual"
+        ],
+        "owner": [
+            "First Owner",
+            "Fourth & Above Owner",
+            "Second Owner",
+            "Test Drive Car",
+            "Third Owner"
+        ]
+    },
+    "features": [
+        "brand",
+        "year",
+        "km_driven",
+        "fuel",
+        "transmission",
+        "owner"
+    ],
+    "target": "selling_price",
+    "model_version": "1.0.0"
+}

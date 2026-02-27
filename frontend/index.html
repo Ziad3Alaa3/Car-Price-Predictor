@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Car Price Predictor</title>
+  
+
+  <link rel="stylesheet" href="/frontend/style.css">
+
+  
+</head>
+
+<body>
+  <main class="layout">
+    <header class="topbar">
+      <div class="topbar__title">
+        <h1>Car Price Predictor</h1>
+        <p>Estimate a car’s selling price based on key attributes.</p>
+      </div>
+    </header>
+
+    <section class="content">
+      <form class="panel panel--form" id="form" autocomplete="off">
+        <div class="panel__head">
+          <h2>Car details</h2>
+        </div>
+
+        <div class="fields">
+          <div class="field">
+            <label for="brand">Brand</label>
+            <select id="brand" name="brand" required></select>
+          </div>
+
+          <div class="field">
+            <label for="year">Year</label>
+            <input id="year" name="year" type="number" inputmode="numeric" min="1950" max="2040" value="2015" required />
+          </div>
+
+          <div class="field">
+            <label for="km_driven">KM driven</label>
+            <input id="km_driven" name="km_driven" type="number" inputmode="numeric" min="0" value="60000" required />
+          </div>
+
+          <div class="field">
+            <label for="fuel">Fuel</label>
+            <select id="fuel" name="fuel" required></select>
+          </div>
+
+          <div class="field">
+            <label for="transmission">Transmission</label>
+            <select id="transmission" name="transmission" required></select>
+          </div>
+
+          <div class="field">
+            <label for="owner">Owner</label>
+            <select id="owner" name="owner" required></select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn--primary" id="btn">Predict</button>
+          <button type="reset" class="btn btn--secondary" id="resetBtn">Reset</button>
+        </div>
+
+        <p class="status" id="status" aria-live="polite"></p>
+      </form>
+
+      <section class="panel panel--result" aria-label="Result">
+        <div class="panel__head">
+          <h2>Estimated price</h2>
+        </div>
+
+        <div class="result">
+          <p class="result__value" id="result">—</p>
+          <p class="result__meta" id="model_version"></p>
+        </div>
+
+        <footer class="panel__foot">
+          <p class="hint">Change the inputs to see how the estimate moves.</p>
+        </footer>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    
+    const API = "http://127.0.0.1:8000";
+  
+    function fillSelect(id, items) {
+      const el = document.getElementById(id);
+      el.innerHTML = "";
+      (items || []).forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        el.appendChild(opt);
+      });
+    }
+  
+    function formatMoney(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return String(value);
+      return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    }
+  
+    async function loadMeta() {
+      const status = document.getElementById("status");
+      status.style.color = "var(--muted)";
+      status.textContent = "Loading options...";
+  
+      try {
+        const res = await fetch(`${API}/meta`);
+        const meta = await res.json();
+  
+        fillSelect("brand", meta.dropdowns?.brand || []);
+        fillSelect("fuel", meta.dropdowns?.fuel || []);
+        fillSelect("transmission", meta.dropdowns?.transmission || []);
+        fillSelect("owner", meta.dropdowns?.owner || []);
+  
+        status.textContent = "";
+      } catch (e) {
+        status.style.color = "var(--danger)";
+        status.textContent = "Fetch /meta failed: " + e;
+      }
+    }
+  
+    async function predict() {
+      const status = document.getElementById("status");
+      const result = document.getElementById("result");
+      const mv = document.getElementById("model_version"); // اختياري
+  
+      status.style.color = "var(--muted)";
+      status.textContent = "Predicting...";
+      result.textContent = "—";
+      if (mv) mv.textContent = "";
+  
+      const payload = {
+        brand: document.getElementById("brand").value,
+        year: Number(document.getElementById("year").value),
+        km_driven: Number(document.getElementById("km_driven").value),
+        fuel: document.getElementById("fuel").value,
+        transmission: document.getElementById("transmission").value,
+        owner: document.getElementById("owner").value,
+      };
+  
+      try {
+        const res = await fetch(`${API}/car_price`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+  
+        const data = await res.json();
+  
+        if (!res.ok) {
+          status.style.color = "var(--danger)";
+          status.textContent = "Error: " + (data.detail || "Unknown error");
+          return;
+        }
+  
+        status.textContent = "";
+        const currency = (data.currency || "").trim();
+        result.textContent = `${formatMoney(data.price)} ${currency}`.trim();
+  
+        if (mv && data.model_version) {
+          mv.textContent = `Model v${data.model_version}`;
+        }
+      } catch (e) {
+        status.style.color = "var(--danger)";
+        status.textContent = "Predict failed: " + e;
+      }
+    }
+  
+    document.getElementById("btn").addEventListener("click", predict);
+  
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      document.getElementById("result").textContent = "—";
+      document.getElementById("status").textContent = "";
+      const mv = document.getElementById("model_version");
+      if (mv) mv.textContent = "";
+    });
+  
+    loadMeta();
+  </script>
+</body>
+</html>
